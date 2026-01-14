@@ -1,10 +1,15 @@
 from flask import Flask, render_template, request
 from data_manager import GridDataManager
 from analytics_engine import ReconEngine
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 # Initialize with your GRID Key
-grid = GridDataManager(api_key="YOUR_API_KEY")
+grid = os.getenv('GRID_API_KEY')##GridDataManager(api_key="YOUR_API_KEY")
 
 @app.route('/')
 def index():
