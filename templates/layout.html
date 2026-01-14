@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Athena | League of Legends</title>
+    <title>Athena | Hextech Analytics</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
+<body class="hex-theme">
     <nav>
-        <div class="logo"><strong>Athena</strong></div>
+        <div class="logo"><strong>HEX-ANALYTICS</strong></div>
         <div class="links">
             <a href="/">HOME</a>
             <a href="/recon">RECON</a>
@@ -20,6 +20,8 @@
         {% block content %}{% endblock %}
     </main>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block scripts %}{% endblock %}
 </body>
 </html>
