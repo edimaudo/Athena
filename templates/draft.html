@@ -1,81 +1,30 @@
 {% extends "layout.html" %}
+
 {% block content %}
 <div class="draft-header">
-    <div class="selection-status">
-        <h2>DRAFT COACH <span class="badge">v1.0 (2026 Rules)</span></h2>
-        <div class="rule-context">
-            <strong>First Selection:</strong> 
-            <span style="color: var(--hex-blue);">Blue Side</span> / 
-            <span style="color: var(--hex-gold);">First Pick Priority</span>
-        </div>
-    </div>
+    <h2>DRAFT COACH <span class="badge">2026 Rules</span></h2>
 </div>
 
 <div class="draft-board">
     <div class="team-side blue-side">
-        <div class="pick-slot" id="b-pick-1"><span>B1</span></div>
-        <div class="pick-slot" id="b-pick-2"><span>B2</span></div>
-        <div class="pick-slot" id="b-pick-3"><span>B3</span></div>
-        <div class="pick-slot" id="b-pick-4"><span>B4</span></div>
-        <div class="pick-slot" id="b-pick-5"><span>B5</span></div>
-        <div class="ban-row" id="b-bans">
-            <div class="ban-slot"></div><div class="ban-slot"></div><div class="ban-slot"></div>
-            <div class="ban-slot"></div><div class="ban-slot"></div>
-        </div>
+        {% for i in range(1, 6) %}
+            <div class="pick-slot" id="b-pick-{{i}}"><span>B{{i}}</span></div>
+        {% endfor %}
     </div>
 
     <div class="center-stage">
-        <div class="turn-indicator">CURRENT TURN: <span id="active-picker">BLUE TEAM</span></div>
         <input type="text" id="champ-search" placeholder="SEARCH CHAMPION..." class="btn-hex">
-        <div class="champion-grid" id="champ-list">
-            </div>
+        <div class="champion-grid" id="champ-list"></div>
     </div>
 
     <div class="team-side red-side">
-        <div class="pick-slot" id="r-pick-1"><span>R1</span></div>
-        <div class="pick-slot" id="r-pick-2"><span>R2</span></div>
-        <div class="pick-slot" id="r-pick-3"><span>R3</span></div>
-        <div class="pick-slot" id="r-pick-4"><span>R4</span></div>
-        <div class="pick-slot" id="r-pick-5"><span>R5</span></div>
-        <div class="ban-row" id="r-bans">
-            <div class="ban-slot"></div><div class="ban-slot"></div><div class="ban-slot"></div>
-            <div class="ban-slot"></div><div class="ban-slot"></div>
-        </div>
+        {% for i in range(1, 6) %}
+            <div class="pick-slot" id="r-pick-{{i}}"><span>R{{i}}</span></div>
+        {% endfor %}
     </div>
 </div>
+{% endblock %}
 
-<div class="hex-container intel-panel">
-    <div class="intel-header">
-        <h3>AI RECOMMENDATIONS & PROBABILITIES</h3>
-        <div id="win-prob">Win Probability: <span style="color: var(--hex-teal);">50%</span></div>
-    </div>
-    <div class="rec-grid">
-        <div class="rec-card">
-            <h4 style="color: var(--hex-gold);">S-TIER SYNERGY</h4>
-            <p id="rec-1">Awaiting Pick...</p>
-        </div>
-        <div class="rec-card">
-            <h4 style="color: var(--hex-red);">HARD COUNTER</h4>
-            <p id="rec-2">Awaiting Pick...</p>
-        </div>
-        <div class="rec-card">
-            <h4>META ADAPTATION</h4>
-            <p id="rec-3">Awaiting Pick...</p>
-        </div>
-    </div>
-</div>
-
-<style>
-    .draft-board { display: grid; grid-template-columns: 250px 1fr 250px; gap: 20px; margin-top: 20px; }
-    .pick-slot { height: 80px; background: rgba(0,0,0,0.4); border: 1px solid var(--hex-blue); margin-bottom: 10px; display: flex; align-items: center; justify-content: center; position: relative; }
-    .red-side .pick-slot { border-color: var(--hex-red); }
-    .ban-row { display: flex; gap: 5px; margin-top: 20px; }
-    .ban-slot { width: 45px; height: 45px; background: #111; border: 1px solid #333; }
-    .center-stage { background: rgba(0,0,0,0.2); border: 1px solid var(--hex-gold); padding: 15px; border-radius: 4px; }
-    .champion-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; height: 400px; overflow-y: auto; margin-top: 15px; }
-    .intel-panel { margin-top: 30px; border-top: 2px solid var(--hex-gold); }
-    .intel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .rec-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
-    .rec-card { background: rgba(200, 170, 110, 0.05); padding: 10px; border: 1px solid #333; }
-</style>
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/draft.js') }}"></script>
 {% endblock %}
