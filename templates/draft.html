@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="draft-header">
+    <div class="selection-status">
+        <h2>DRAFT COACH <span class="badge">v1.0 (2026 Rules)</span></h2>
+        <div class="rule-context">
+            <strong>First Selection:</strong> 
+            <span style="color: var(--hex-blue);">Blue Side</span> / 
+            <span style="color: var(--hex-gold);">First Pick Priority</span>
+        </div>
+    </div>
+</div>
+
+<div class="draft-board">
+    <div class="team-side blue-side">
+        <div class="pick-slot" id="b-pick-1"><span>B1</span></div>
+        <div class="pick-slot" id="b-pick-2"><span>B2</span></div>
+        <div class="pick-slot" id="b-pick-3"><span>B3</span></div>
+        <div class="pick-slot" id="b-pick-4"><span>B4</span></div>
+        <div class="pick-slot" id="b-pick-5"><span>B5</span></div>
+        <div class="ban-row" id="b-bans">
+            <div class="ban-slot"></div><div class="ban-slot"></div><div class="ban-slot"></div>
+            <div class="ban-slot"></div><div class="ban-slot"></div>
+        </div>
+    </div>
+
+    <div class="center-stage">
+        <div class="turn-indicator">CURRENT TURN: <span id="active-picker">BLUE TEAM</span></div>
+        <input type="text" id="champ-search" placeholder="SEARCH CHAMPION..." class="btn-hex">
+        <div class="champion-grid" id="champ-list">
+            </div>
+    </div>
+
+    <div class="team-side red-side">
+        <div class="pick-slot" id="r-pick-1"><span>R1</span></div>
+        <div class="pick-slot" id="r-pick-2"><span>R2</span></div>
+        <div class="pick-slot" id="r-pick-3"><span>R3</span></div>
+        <div class="pick-slot" id="r-pick-4"><span>R4</span></div>
+        <div class="pick-slot" id="r-pick-5"><span>R5</span></div>
+        <div class="ban-row" id="r-bans">
+            <div class="ban-slot"></div><div class="ban-slot"></div><div class="ban-slot"></div>
+            <div class="ban-slot"></div><div class="ban-slot"></div>
+        </div>
+    </div>
+</div>
+
+<div class="hex-container intel-panel">
+    <div class="intel-header">
+        <h3>AI RECOMMENDATIONS & PROBABILITIES</h3>
+        <div id="win-prob">Win Probability: <span style="color: var(--hex-teal);">50%</span></div>
+    </div>
+    <div class="rec-grid">
+        <div class="rec-card">
+            <h4 style="color: var(--hex-gold);">S-TIER SYNERGY</h4>
+            <p id="rec-1">Awaiting Pick...</p>
+        </div>
+        <div class="rec-card">
+            <h4 style="
