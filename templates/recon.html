@@ -1,47 +1,62 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="recon-grid">
-    <div class="hex-container">
-        <h3><span style="color: var(--hex-gold);">TEAM IDENTITY</span></h3>
-        <p><strong>Aggression:</strong> {{ report.macro.early_aggression }}</p>
-        <p><strong>Objective Focus:</strong> {{ report.macro.obj_priority }}</p>
-        <p><strong>Gold Diff @ 15m:</strong> {{ report.macro.avg_gd15 }}g</p>
-        <hr>
-        <div id="macro-chart"></div>
-    </div>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
-    <div class="hex-container highlight-box">
-        <h3 style="color: var(--hex-teal);">HOW TO WIN</h3>
-        <ul>
-            {% for rec in report.recommendations %}
-                <li>{{ rec | safe }}</li>
+<div class="hex-container" style="margin-bottom: 30px;">
+    <h2><span style="color: var(--hex-gold);">OPPONENT SCOUTING:</span> Automated Recon</h2>
+    <form method="POST" style="display: flex; gap: 15px;">
+        <select name="tournament_id" class="btn-hex" style="flex-grow: 1; background: var(--hex-dark-blue);">
+            {% for t in tournaments %}
+                <option value="{{ t.id }}">{{ t.name }}</option>
             {% endfor %}
-        </ul>
+        </select>
+        <button type="submit" class="btn-hex">Scour GRID Data</button>
+    </form>
+</div>
+
+{% if report %}
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    
+    <div class="hex-container" style="border-color: var(--hex-teal);">
+        <h3 style="color: var(--hex-teal);">HOW TO WIN</h3>
+        <div class="insight-list">
+            {% for rec in report.recommendations %}
+                <div style="margin-bottom: 15px; padding-left: 10px; border-left: 3px solid var(--hex-gold);">
+                    {{ rec | safe }}
+                </div>
+            {% endfor %}
+        </div>
     </div>
 
     <div class="hex-container">
-        <h3>PLAYER PROFILES</h3>
-        {% for player in report.players %}
-        <div class="player-card">
-            <span class="role-badge">{{ player.role }}</span> <strong>{{ player.name }}</strong>
-            <p><small>Tendency: {{ player.tendency or 'Scaling focus' }}</small></p>
-            <p style="color: var(--hex-red); font-size: 0.8rem;">Vulnerability: {{ player.weakness }}</p>
-        </div>
-        {% endfor %}
+        <h3>SIDE SELECTION IMPACT</h3>
+        <div id="side-chart"></div>
     </div>
 
     <div class="hex-container">
-        <h3>RECENT COMPS</h3>
-        <div class="comp-preview">
-            [Aatrox / Sejuani / Sylas / Kai'Sa / Nautilus]
-        </div>
+        <h3>OBJECTIVE DNA</h3>
+        <div id="radar-chart"></div>
+    </div>
+
+    <div class="hex-container">
+        <h3>TEAM PERFORMANCE SUMMARY</h3>
+        <table style="width: 100%; text-align: left;">
+            <tr><td><strong>Aggression:</strong></td><td style="color: var(--hex-teal);">{{ report.macro.aggression }}</td></tr>
+            <tr><td><strong>Primary Obj:</strong></td><td>{{ report.macro.obj_priority }}</td></tr>
+            <tr><td><strong>Avg Gold @ 15:</strong></td><td>+{{ report.macro.avg_gd15 }}g</td></tr>
+        </table>
     </div>
 </div>
 
+<script>
+    const sideData = {{ report.charts.side_chart | safe }};
+    const radarData = {{ report.charts.radar_chart | safe }};
+    Plotly.newPlot('side-chart', sideData.data, sideData.layout);
+    Plotly.newPlot('radar-chart', radarData.data, radarData.layout);
+</script>
+{% endif %}
+
 <style>
-    .recon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .highlight-box { border: 2px solid var(--hex-teal); background: rgba(10, 200, 185, 0.05); }
-    .player-card { border-bottom: 1px solid #333; padding: 10px 0; }
-    .role-badge { background: var(--hex-blue); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
+    .hex-container h3 { margin-top: 0; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; color: var(--hex-gold); }
 </style>
 {% endblock %}
