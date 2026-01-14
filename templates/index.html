@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block content %}
+<div style="text-align: center; margin-bottom: 50px;">
+    <h1 style="font-size: 3rem; color: var(--hex-gold);">Forge Your Victory</h1>
+    <p style="color: var(--hex-teal);">The Ultimate Scouting & Drafting Engine for Competitive League of Legends</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+    <div class="hex-container">
+        <h2 style="color: var(--hex-gold);">Category 2: Recon</h2>
+        <p>Generate automated scouting reports from recent GRID data. Identify player tendencies and common team strategies.</p>
+        <a href="/recon"><button class="btn-hex">Launch Recon</button></a>
+    </div>
+
+    <div class="hex-container">
+        <h2 style="color: var(--hex-gold);">Category 3: Draft Coach</h2>
+        <p>Real-time AI drafting assistant. Predict enemy picks and calculate win-rate impact turn-by-turn.</p>
+        <a href="/draft"><button class="btn-hex">Open Draft Room</button></a>
+    </div>
+</div>
+{% endblock %}
