@@ -1,11 +1,10 @@
 {% extends "layout.html" %}
-{% block content %}
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
+{% block content %}
 <div class="hex-container" style="margin-bottom: 30px;">
     <h2><span style="color: var(--hex-gold);">OPPONENT SCOUTING:</span> Automated Recon</h2>
     <form method="POST" style="display: flex; gap: 15px;">
-        <select name="tournament_id" class="btn-hex" style="flex-grow: 1; background: var(--hex-dark-blue);">
+        <select name="tournament_id" class="btn-hex" style="flex-grow: 1;">
             {% for t in tournaments %}
                 <option value="{{ t.id }}">{{ t.name }}</option>
             {% endfor %}
@@ -16,47 +15,21 @@
 
 {% if report %}
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-    
-    <div class="hex-container" style="border-color: var(--hex-teal);">
-        <h3 style="color: var(--hex-teal);">HOW TO WIN</h3>
-        <div class="insight-list">
-            {% for rec in report.recommendations %}
-                <div style="margin-bottom: 15px; padding-left: 10px; border-left: 3px solid var(--hex-gold);">
-                    {{ rec | safe }}
-                </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <div class="hex-container">
-        <h3>SIDE SELECTION IMPACT</h3>
-        <div id="side-chart"></div>
-    </div>
-
-    <div class="hex-container">
-        <h3>OBJECTIVE DNA</h3>
-        <div id="radar-chart"></div>
-    </div>
-
-    <div class="hex-container">
-        <h3>TEAM PERFORMANCE SUMMARY</h3>
-        <table style="width: 100%; text-align: left;">
-            <tr><td><strong>Aggression:</strong></td><td style="color: var(--hex-teal);">{{ report.macro.aggression }}</td></tr>
-            <tr><td><strong>Primary Obj:</strong></td><td>{{ report.macro.obj_priority }}</td></tr>
-            <tr><td><strong>Avg Gold @ 15:</strong></td><td>+{{ report.macro.avg_gd15 }}g</td></tr>
-        </table>
-    </div>
+    <div class="hex-container"><div id="side-chart"></div></div>
+    <div class="hex-container"><div id="radar-chart"></div></div>
 </div>
-
-<script>
-    const sideData = {{ report.charts.side_chart | safe }};
-    const radarData = {{ report.charts.radar_chart | safe }};
-    Plotly.newPlot('side-chart', sideData.data, sideData.layout);
-    Plotly.newPlot('radar-chart', radarData.data, radarData.layout);
-</script>
 {% endif %}
+{% endblock %}
 
-<style>
-    .hex-container h3 { margin-top: 0; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; color: var(--hex-gold); }
-</style>
+{% block scripts %}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    {% if report %}
+    <script>
+        const sideData = {{ report.charts.side_chart | safe }};
+        const radarData = {{ report.charts.radar_chart | safe }};
+        Plotly.newPlot('side-chart', sideData.data, sideData.layout);
+        Plotly.newPlot('radar-chart', radarData.data, radarData.layout);
+    </script>
+    {% endif %}
+    <script src="{{ url_for('static', filename='js/recon.js') }}"></script>
 {% endblock %}
