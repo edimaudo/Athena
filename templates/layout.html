@@ -1,1 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hextech Analytics | League of Legends</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <div class="logo"><strong>HEXTECH ANALYTICS</strong></div>
+        <div class="links">
+            <a href="/">HOME</a>
+            <a href="/recon">RECON</a>
+            <a href="/draft">DRAFT COACH</a>
+            <a href="/help">HELP</a>
+            <a href="/about">ABOUT</a>
+        </div>
+    </nav>
+    
+    <main style="padding: 40px;">
+        {% block content %}{% endblock %}
+    </main>
 
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
