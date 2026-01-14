@@ -1,60 +1,62 @@
+
+import plotly.utils
 import pandas as pd
 import plotly.express as px
-import plotly.utils
+import plotly.graph_objects as go
 import json
 
 class ReconEngine:
     @staticmethod
-    def calculate_macro_stats(match_history):
-        """Calculates macro-level patterns from a list of matches."""
-        # Dummy logic simulating data aggregation from GRID
-        total_games = len(match_history)
-        first_blood_count = sum(1 for m in match_history if m.get('first_blood', False))
-        dragon_priority = sum(1 for m in match_history if m.get('first_dragon', False))
+    def generate_report(team_data, match_history):
+        """Main entry point to create the full scouting report."""
+        macro = ReconEngine._analyze_macro(match_history)
+        players = ReconEngine._analyze_players(match_history)
+        comps = ReconEngine._analyze_compositions(match_history)
+        recommendations = ReconEngine._generate_recommendations(macro, players)
         
-        stats = {
-            "first_blood_rate": (first_blood_count / total_games) * 100 if total_games > 0 else 0,
-            "dragon_priority": (dragon_priority / total_games) * 100 if total_games > 0 else 0,
-            "avg_game_time": "32:15"
-        }
-        return stats
-
-    @staticmethod
-    def generate_how_to_win(stats):
-        """Generates actionable coaching insights based on statistical thresholds."""
-        insights = []
-        if stats['first_blood_rate'] > 65:
-            insights.append({
-                "type": "Warning",
-                "text": "Opponent has a high Early Aggression score. Recommend defensive warding at 2:45."
-            })
-        if stats['dragon_priority'] > 70:
-            insights.append({
-                "type": "Strategy",
-                "text": "High Dragon priority. Draft a bot lane with 'Priority' to contest early drakes."
-            })
-        return insights
-
-    @staticmethod
-    def create_plots(match_history):
-        """Generates Plotly charts for the UI."""
-        # 1. Champion Pool Bar Chart
-        df = pd.DataFrame([{"Champion": "Lee Sin", "Games": 5}, {"Champion": "Viego", "Games": 3}])
-        fig_champs = px.bar(df, x='Champion', y='Games', title="Most Played Champions",
-                            color_discrete_sequence=['#0ac8b9'])
-        fig_champs.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)')
-
-        # 2. Objective Radar Chart (Radar requires graph_objects)
-        import plotly.graph_objects as go
-        fig_radar = go.Figure(data=go.Scatterpolar(
-            r=[80, 50, 70, 40],
-            theta=['First Blood', 'First Tower', 'First Dragon', 'First Herald'],
-            fill='toself',
-            marker=dict(color='#c8aa6e')
-        ))
-        fig_radar.update_layout(template="plotly_dark", title="Objective Priority %")
-
         return {
-            "champs": json.dumps(fig_champs, cls=plotly.utils.PlotlyJSONEncoder),
-            "radar": json.dumps(fig_radar, cls=plotly.utils.PlotlyJSONEncoder)
+            "macro": macro,
+            "players": players,
+            "comps": comps,
+            "recommendations": recommendations,
+            "charts": ReconEngine._generate_charts(macro, players)
         }
+
+    @staticmethod
+    def _analyze_macro(matches):
+        # Calculate Team-wide patterns
+        df = pd.DataFrame(matches)
+        return {
+            "early_aggression": "High" if df['fb_rate'].mean() > 0.6 else "Moderate",
+            "obj_priority": "Dragon" if df['dragon_rate'].mean() > df['herald_rate'].mean() else "Void/Tower",
+            "avg_gd15": int(df['gold_diff_15'].mean()),
+            "win_rate_when_ahead": f"{int(df[df['lead_15'] == True]['win'].mean() * 100)}%"
+        }
+
+    @staticmethod
+    def _analyze_players(matches):
+        # Logic to find statistical outliers (e.g., Mid laner weak to assassins)
+        # This would iterate through match participants in the GRID data
+        return [
+            {"role": "Mid", "name": "PlayerOne", "pool": ["Azir", "Orianna"], "weakness": "Low mobility, vulnerable to assassins"},
+            {"role": "Jng", "name": "JunglerX", "tendency": "Paths top-to-bot 80% of games", "top_champ": "Lee Sin"}
+        ]
+
+    @staticmethod
+    def _generate_recommendations(macro, players):
+        rec = []
+        if macro['early_aggression'] == "High":
+            rec.append("⚠️ **Defensive Posture:** Opponent seeks early kills. Invest in deep vision at 2:45 to track jungle pathing.")
+        
+        for p in players:
+            if "assassins" in p.get('weakness', '').lower():
+                rec.append(f"🎯 **Exploit Weakness:** {p['name']} struggles against assassins. Pick LeBlanc or Zed to neutralize mid-lane scaling.")
+        
+        return rec
+
+    @staticmethod
+    def _generate_charts(macro, players):
+        # Chart 1: Gold Difference at 15m (Line Chart)
+        # Chart 2: Objective Control (Radar Chart)
+        # ... logic similar to previous iteration but with real data structures
+        return {} # JSON Plotly objects
