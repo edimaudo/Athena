@@ -12,7 +12,7 @@
 body {
     background-color: var(--hex-black);
     color: var(--hex-gold-bright);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: Helvetica,'Segoe UI', 'Century Schoolbook',Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     overflow-x: hidden;
 }
