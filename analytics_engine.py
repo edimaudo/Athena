@@ -1,62 +1,70 @@
-
-import plotly.utils
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import json
+import plotly.utils
 
 class ReconEngine:
     @staticmethod
-    def generate_report(team_data, match_history):
-        """Main entry point to create the full scouting report."""
-        macro = ReconEngine._analyze_macro(match_history)
-        players = ReconEngine._analyze_players(match_history)
-        comps = ReconEngine._analyze_compositions(match_history)
-        recommendations = ReconEngine._generate_recommendations(macro, players)
+    def generate_full_report(match_history, team_id, current_patch="16.1"):
+        df = pd.DataFrame(match_history)
         
+        # 1. Macro Analysis
+        macro = {
+            "aggression": "High" if df['first_blood'].mean() > 0.6 else "Scaling",
+            "obj_priority": "Dragon" if df['first_dragon'].mean() > df['first_herald'].mean() else "Tempo/Herald",
+            "avg_gd15": int(df['gold_diff_15'].mean())
+        }
+
+        # 2. Side & Patch Analysis
+        blue_side = df[df['side'] == 'blue']
+        red_side = df[df['side'] == 'red']
+        patch_matches = df[df['patch'] == current_patch]
+        
+        side_stats = {
+            "blue_winrate": round(blue_side['win'].mean() * 100, 1) if not blue_side.empty else 0,
+            "red_winrate": round(red_side['win'].mean() * 100, 1) if not red_side.empty else 0
+        }
+
+        # 3. How to Win Logic (The "Actionable" Part)
+        recommendations = []
+        # General Strategy
+        if macro['aggression'] == "High":
+            recommendations.append("⚠️ **Anti-Snowball:** Opponent relies on First Blood. Avoid Level 3 jungle invades.")
+        
+        # Side-Specific Logic
+        if side_stats['blue_winrate'] > side_stats['red_winrate'] + 10:
+            recommendations.append("🔴 **Side Exploit:** Opponent struggles on Red side. Force them to pick Red to disrupt their comfort.")
+        
+        # Patch-Specific Logic
+        if patch_matches['win'].mean() < df['win'].mean():
+            recommendations.append(f"📉 **Patch Weakness:** Team has a lower winrate on {current_patch}. Their core champion pool was likely nerfed.")
+
         return {
             "macro": macro,
-            "players": players,
-            "comps": comps,
+            "side_stats": side_stats,
             "recommendations": recommendations,
-            "charts": ReconEngine._generate_charts(macro, players)
+            "charts": ReconEngine._create_visuals(df, side_stats)
         }
 
     @staticmethod
-    def _analyze_macro(matches):
-        # Calculate Team-wide patterns
-        df = pd.DataFrame(matches)
+    def _create_visuals(df, side_stats):
+        # Side Winrate Comparison
+        fig_side = go.Figure(data=[
+            go.Bar(name='Blue Side', x=['Winrate'], y=[side_stats['blue_winrate']], marker_color='#005a82'),
+            go.Bar(name='Red Side', x=['Winrate'], y=[side_stats['red_winrate']], marker_color='#ae1e1e')
+        ])
+        fig_side.update_layout(template="plotly_dark", barmode='group', paper_bgcolor='rgba(0,0,0,0)', height=300)
+
+        # Objective Priority Radar
+        fig_radar = go.Figure(data=go.Scatterpolar(
+            r=[df['first_blood'].mean()*100, df['first_tower'].mean()*100, df['first_dragon'].mean()*100, df['first_herald'].mean()*100],
+            theta=['First Blood', 'First Tower', 'First Dragon', 'First Herald'],
+            fill='toself', marker=dict(color='#c8aa6e')
+        ))
+        fig_radar.update_layout(template="plotly_dark", polar=dict(radialaxis=dict(visible=True, range=[0, 100])), paper_bgcolor='rgba(0,0,0,0)', height=300)
+
         return {
-            "early_aggression": "High" if df['fb_rate'].mean() > 0.6 else "Moderate",
-            "obj_priority": "Dragon" if df['dragon_rate'].mean() > df['herald_rate'].mean() else "Void/Tower",
-            "avg_gd15": int(df['gold_diff_15'].mean()),
-            "win_rate_when_ahead": f"{int(df[df['lead_15'] == True]['win'].mean() * 100)}%"
+            "side_chart": json.dumps(fig_side, cls=plotly.utils.PlotlyJSONEncoder),
+            "radar_chart": json.dumps(fig_radar, cls=plotly.utils.PlotlyJSONEncoder)
         }
-
-    @staticmethod
-    def _analyze_players(matches):
-        # Logic to find statistical outliers (e.g., Mid laner weak to assassins)
-        # This would iterate through match participants in the GRID data
-        return [
-            {"role": "Mid", "name": "PlayerOne", "pool": ["Azir", "Orianna"], "weakness": "Low mobility, vulnerable to assassins"},
-            {"role": "Jng", "name": "JunglerX", "tendency": "Paths top-to-bot 80% of games", "top_champ": "Lee Sin"}
-        ]
-
-    @staticmethod
-    def _generate_recommendations(macro, players):
-        rec = []
-        if macro['early_aggression'] == "High":
-            rec.append("⚠️ **Defensive Posture:** Opponent seeks early kills. Invest in deep vision at 2:45 to track jungle pathing.")
-        
-        for p in players:
-            if "assassins" in p.get('weakness', '').lower():
-                rec.append(f"🎯 **Exploit Weakness:** {p['name']} struggles against assassins. Pick LeBlanc or Zed to neutralize mid-lane scaling.")
-        
-        return rec
-
-    @staticmethod
-    def _generate_charts(macro, players):
-        # Chart 1: Gold Difference at 15m (Line Chart)
-        # Chart 2: Objective Control (Radar Chart)
-        # ... logic similar to previous iteration but with real data structures
-        return {} # JSON Plotly objects
