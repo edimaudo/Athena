@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="hex-container">
+    <h1 style="color: var(--hex-gold);">Command Center: Intel Guide</h1>
+    <p>Welcome to the <strong>Recon & Draft Coach</strong> help portal. Use the sections below to understand our data-driven insights.</p>
+
+    <hr style="border-color: var(--hex-blue);">
+
+    <h3 style="color: var(--hex-teal);">1. Understanding "Objective DNA"</h3>
+    <p>Our radar charts visualize a team's priority. A "spiky" graph toward <strong>First Blood</strong> indicates a team that relies on early lane dominance, while a pull toward <strong>Dragons</strong> suggests a late-game scaling strategy.</p>
+
+    <h3 style="color: var(--hex-teal);">2. Side Selection Logic</h3>
+    <p>We analyze the "Blue vs Red" win-rate delta. If you see a warning for <strong>Red Side Vulnerability</strong>, it means the opponent struggles when they lose First Pick priority or fails to utilize the Counter-pick effectively.</p>
+
+    <h3 style="color: var(--hex-teal);">3. "How to Win" Recommendations</h3>
+    <p>These are generated via our <strong>Heuristic Engine</strong>. It cross-references the current game patch (e.g., v16.1) with historical performance to identify which players are currently "under-performing" on the meta picks.</p>
+</div>
+{% endblock %}
