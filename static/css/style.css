@@ -1,1 +1,62 @@
 
+:root {
+    --hex-black: #010a13;
+    --hex-dark-blue: #091428;
+    --hex-gold: #c8aa6e;
+    --hex-gold-bright: #f0e6d2;
+    --hex-teal: #0ac8b9;
+    --hex-blue: #005a82;
+    --hex-red: #ae1e1e;
+}
+
+body {
+    background-color: var(--hex-black);
+    color: var(--hex-gold-bright);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+/* Hextech Border Effect */
+.hex-container {
+    border: 2px solid var(--hex-gold);
+    background: rgba(9, 20, 40, 0.9);
+    box-shadow: 0 0 15px rgba(200, 170, 110, 0.2);
+    padding: 20px;
+    position: relative;
+}
+
+/* Glowing Buttons */
+.btn-hex {
+    background: linear-gradient(to bottom, var(--hex-blue), #002c3e);
+    border: 1px solid var(--hex-teal);
+    color: var(--hex-teal);
+    padding: 10px 25px;
+    cursor: pointer;
+    transition: 0.3s;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.btn-hex:hover {
+    box-shadow: 0 0 10px var(--hex-teal);
+    color: white;
+}
+
+/* Navigation Bar */
+nav {
+    border-bottom: 2px solid var(--hex-gold);
+    background: var(--hex-dark-blue);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+nav a {
+    color: var(--hex-gold);
+    text-decoration: none;
+    margin: 0 15px;
+    font-size: 0.9rem;
+}
