@@ -15,6 +15,10 @@ grid = os.getenv('GRID_API_KEY')##GridDataManager(api_key="YOUR_API_KEY")
 def index():
     return render_template('index.html')
 
+@app.route('/help')
+def help_page():
+    return render_template('help.html')
+
 @app.route('/recon', methods=['GET', 'POST'])
 def recon():
     tournaments = grid.get_tournaments(title_id="3") # LoL ID
