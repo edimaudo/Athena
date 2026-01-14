@@ -1,1 +1,44 @@
+{% extends "layout.html" %}
+{% block content %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
+<div class="hex-container">
+    <h2><span style="color: var(--hex-gold);">OPPONENT RECON:</span> Scout upcoming match</h2>
+    <form method="POST">
+        <select name="tournament_id" class="btn-hex">
+            {% for t in tournaments %}
+                <option value="{{ t.id }}">{{ t.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn-hex">GENERATE REPORT</button>
+    </form>
+</div>
+
+{% if report %}
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+    <div class="hex-container">
+        <h3 style="color: var(--hex-teal);">How to Win</h3>
+        {% for insight in report.insights %}
+            <div style="border-left: 4px solid var(--hex-gold); padding: 10px; margin: 10px 0; background: rgba(200,170,110,0.1);">
+                <strong>[{{ insight.type }}]</strong> {{ insight.text }}
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="hex-container">
+        <div id="radar-chart"></div>
+    </div>
+</div>
+
+<div class="hex-container" style="margin-top: 20px;">
+    <div id="champ-chart"></div>
+</div>
+
+<script>
+    var champData = {{ report.charts.champs | safe }};
+    var radarData = {{ report.charts.radar | safe }};
+    Plotly.newPlot('champ-chart', champData.data, champData.layout);
+    Plotly.newPlot('radar-chart', radarData.data, radarData.layout);
+</script>
+{% endif %}
+{% endblock %}
