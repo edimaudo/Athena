@@ -1,10 +1,10 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request
 from data_manager import GridDataManager
 from analytics_engine import ReconEngine
 
 app = Flask(__name__)
-# Replace with your actual key or use environment variables
-grid_manager = GridDataManager(api_key="YOUR_GRID_API_KEY")
+# Initialize with your GRID Key
+grid = GridDataManager(api_key="YOUR_API_KEY")
 
 @app.route('/')
 def index():
@@ -12,25 +12,25 @@ def index():
 
 @app.route('/recon', methods=['GET', 'POST'])
 def recon():
-    tournaments = grid_manager.get_tournaments()
+    tournaments = grid.get_tournaments(title_id="3") # LoL ID
     report = None
     
     if request.method == 'POST':
-        # 1. Fetch data from GRID
         t_id = request.form.get('tournament_id')
-        raw_matches = grid_manager.get_recent_series(t_id) # Mocking detail here
+        # 1. Scour data from GRID
+        raw_series = grid.get_recent_series(t_id)
         
-        # 2. Process with Engine
-        stats = ReconEngine.calculate_macro_stats(raw_matches)
-        insights = ReconEngine.generate_how_to_win(stats)
-        charts = ReconEngine.create_plots(raw_matches)
+        # 2. Mocking expanded data keys for the demonstration 
+        # (In production, these come from the deep match-event parsing)
+        processed_matches = [
+            {"win": 1, "side": "blue", "first_blood": 1, "first_dragon": 1, "first_herald": 0, "first_tower": 1, "gold_diff_15": 1200, "patch": "16.1"},
+            {"win": 0, "side": "red", "first_blood": 0, "first_dragon": 0, "first_herald": 1, "first_tower": 0, "gold_diff_15": -400, "patch": "16.1"},
+            {"win": 1, "side": "blue", "first_blood": 1, "first_dragon": 1, "first_herald": 1, "first_tower": 1, "gold_diff_15": 2100, "patch": "15.9"},
+        ]
         
-        report = {
-            "stats": stats,
-            "insights": insights,
-            "charts": charts
-        }
-        
+        # 3. Generate Report
+        report = ReconEngine.generate_full_report(processed_matches, team_id=t_id)
+
     return render_template('recon.html', tournaments=tournaments, report=report)
 
 if __name__ == '__main__':
