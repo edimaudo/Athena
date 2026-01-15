@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="hex-container" style="margin-bottom: 30px;">
-    <h2><span style="color: var(--hex-gold);">OPPONENT SCOUTING:</span> Automated Recon</h2>
+    <h2><span style="color: var(--hex-gold);\">OPPONENT SCOUTING:</span> Automated Recon</h2>
     <form method="POST" style="display: flex; gap: 15px;">
         <select name="tournament_id" class="btn-hex" style="flex-grow: 1;">
             {% for t in tournaments %}
@@ -14,22 +14,37 @@
 </div>
 
 {% if report %}
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-    <div class="hex-container"><div id="side-chart"></div></div>
-    <div class="hex-container"><div id="radar-chart"></div></div>
-</div>
+    {% if report.error %}
+        <div class="hex-container" style="border-color: var(--hex-red); text-align: center;">
+            <h3 style="color: var(--hex-red);">DATA UNAVAILABLE</h3>
+            <p>{{ report.error }}</p>
+        </div>
+    {% else %}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="hex-container">
+                <h3 style="margin-bottom: 10px;">SIDE WINRATE</h3>
+                <div id="side-chart"></div>
+            </div>
+            <div class="hex-container">
+                <h3 style="margin-bottom: 10px;">OBJECTIVE DNA</h3>
+                <div id="radar-chart"></div>
+            </div>
+        </div>
+    {% endif %}
 {% endif %}
 {% endblock %}
 
 {% block scripts %}
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    {% if report %}
+    
+    {# Safety Fix: Only execute JavaScript if there is no error in the report #}
+    {% if report and not report.error %}
     <script>
         const sideData = {{ report.charts.side_chart | safe }};
         const radarData = {{ report.charts.radar_chart | safe }};
+        
         Plotly.newPlot('side-chart', sideData.data, sideData.layout);
         Plotly.newPlot('radar-chart', radarData.data, radarData.layout);
     </script>
     {% endif %}
-    <script src="{{ url_for('static', filename='js/recon.js') }}"></script>
 {% endblock %}
