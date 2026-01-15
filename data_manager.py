@@ -23,6 +23,25 @@ class GridDataManager:
             print(f"GRID API Error: {e}")
             return None
 
+    def get_series_stats(self, series_id):
+        """Fetches granular match data for a specific series ID."""
+        query = """
+        query Series($id: ID!) {
+            series(id: $id) {
+                id
+                matches {
+                    id
+                    state
+                    # You can add more fields here if your ReconEngine needs them
+                }
+            }
+        }
+        """
+        variables = {"id": series_id}
+        result = self._execute_query(query, variables)
+        
+        # Return the series data if found, otherwise None
+        return result['data']['series'] if result and 'data' in result else None
     def get_titles(self):
         """Fetches available game titles (LoL, VAL, etc.)."""
         query = """
@@ -80,3 +99,4 @@ class GridDataManager:
         variables = {"tournamentId": [tournament_id]}
         result = self._execute_query(query, variables)
         return [edge['node'] for edge in result['data']['allSeries']['edges']] if result else []
+
