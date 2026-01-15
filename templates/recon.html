@@ -47,4 +47,5 @@
         Plotly.newPlot('radar-chart', radarData.data, radarData.layout);
     </script>
     {% endif %}
+    <script src="{{ url_for('static', filename='js/recon.js') }}"></script>
 {% endblock %}
