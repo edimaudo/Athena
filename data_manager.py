@@ -23,6 +23,7 @@ class GridDataManager:
             print(f"GRID API Error: {e}")
             return None
 
+
     def get_series_stats(self, series_id):
         query = """
         query Series($id: ID!) {
@@ -30,13 +31,14 @@ class GridDataManager:
                 id
                 matches {
                     id
+                    # Use aliases (expected_name: api_name) to match your engine
                     side
                     win
-                    first_blood
-                    first_tower
-                    first_dragon
-                    first_herald
-                    gold_diff_15
+                    first_blood: firstBlood
+                    first_tower: firstTower
+                    first_dragon: firstDragon
+                    first_herald: firstHerald
+                    gold_diff_15: goldDiff15
                     patch
                 }
             }
@@ -44,8 +46,15 @@ class GridDataManager:
         """
         variables = {"id": series_id}
         result = self._execute_query(query, variables)
-        # Return the first match or the series data structure your engine expects
-        return result['data']['series']['matches'][0] if result else None
+        
+        try:
+            # We check if 'data', 'series', and 'matches' all exist to prevent KeyErrors
+            if result and result.get('data') and result['data'].get('series'):
+                matches = result['data']['series'].get('matches', [])
+                return matches[0] if matches else None
+        except (KeyError, TypeError, IndexError):
+            return None
+        return None
         
     def get_titles(self):
         """Fetches available game titles (LoL, VAL, etc.)."""
@@ -104,5 +113,6 @@ class GridDataManager:
         variables = {"tournamentId": [tournament_id]}
         result = self._execute_query(query, variables)
         return [edge['node'] for edge in result['data']['allSeries']['edges']] if result else []
+
 
 
