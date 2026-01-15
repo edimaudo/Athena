@@ -1,12 +1,15 @@
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import json
 import plotly.utils
+import json
 
 class ReconEngine:
     @staticmethod
     def generate_full_report(match_history, team_id, current_patch="16.1"):
+        # Ensure match_history is a list even if a single dictionary is passed
+        if isinstance(match_history, dict):
+            match_history = [match_history]
         df = pd.DataFrame(match_history)
         
         # 1. Macro Analysis
