@@ -25,36 +25,33 @@ class GridDataManager:
 
 
     def get_series_stats(self, series_id):
-        query = """
-        query Series($id: ID!) {
-            series(id: $id) {
-                id
-                matches {
+            query = """
+            query Series($id: ID!) {
+                series(id: $id) {
                     id
-                    # Use aliases (expected_name: api_name) to match your engine
-                    side
-                    win
-                    first_blood: firstBlood
-                    first_tower: firstTower
-                    first_dragon: firstDragon
-                    first_herald: firstHerald
-                    gold_diff_15: goldDiff15
-                    patch
+                    matches {
+                        id
+                        side
+                        win
+                        # Alias the API names to the names your Engine uses
+                        first_blood: firstBlood
+                        first_tower: firstTower
+                        first_dragon: firstDragon
+                        first_herald: firstHerald
+                        gold_diff_15: goldDiff15
+                        patch
+                    }
                 }
             }
-        }
-        """
-        variables = {"id": series_id}
-        result = self._execute_query(query, variables)
-        
-        try:
-            # We check if 'data', 'series', and 'matches' all exist to prevent KeyErrors
+            """
+            variables = {"id": series_id}
+            result = self._execute_query(query, variables)
+            
+            # Add a safety check to ensure data exists before indexing [0]
             if result and result.get('data') and result['data'].get('series'):
                 matches = result['data']['series'].get('matches', [])
                 return matches[0] if matches else None
-        except (KeyError, TypeError, IndexError):
             return None
-        return None
         
     def get_titles(self):
         """Fetches available game titles (LoL, VAL, etc.)."""
@@ -113,6 +110,7 @@ class GridDataManager:
         variables = {"tournamentId": [tournament_id]}
         result = self._execute_query(query, variables)
         return [edge['node'] for edge in result['data']['allSeries']['edges']] if result else []
+
 
 
 
