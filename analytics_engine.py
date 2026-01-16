@@ -7,10 +7,14 @@ import json
 class ReconEngine:
     @staticmethod
     def generate_full_report(match_history, team_id, current_patch="16.1"):
-        # Ensure match_history is a list even if a single dictionary is passed
-        if isinstance(match_history, dict):
-            match_history = [match_history]
-        df = pd.DataFrame(match_history)
+        # Handle single dictionary or list of matches
+        flat_matches = []
+        if isinstance(match_history, list) and isinstance(match_history[0], list):
+            for series in match_history: flat_matches.extend(series)
+        else:
+            flat_matches = [match_history] if isinstance(match_history, dict) else match_history
+            
+        df = pd.DataFrame(flat_matches)
         
         # 1. Macro Analysis
         macro = {
@@ -19,55 +23,59 @@ class ReconEngine:
             "avg_gd15": int(df['gold_diff_15'].mean())
         }
 
-        # 2. Side & Patch Analysis
-        blue_side = df[df['side'] == 'blue']
-        red_side = df[df['side'] == 'red']
-        patch_matches = df[df['patch'] == current_patch]
+        # 2. Player & Comp Analysis (New Logic)
+        all_participants = []
+        for match in flat_matches:
+            all_participants.extend(match.get('participants', []))
         
-        side_stats = {
-            "blue_winrate": round(blue_side['win'].mean() * 100, 1) if not blue_side.empty else 0,
-            "red_winrate": round(red_side['win'].mean() * 100, 1) if not red_side.empty else 0
-        }
+        p_df = pd.DataFrame([
+            {
+                'name': p['player']['name'], 
+                'hero': p['hero']['name'], 
+                'kda': (p['kills'] + p['assists']) / max(1, p['deaths'])
+            } for p in all_participants
+        ])
 
-        # 3. How to Win Logic (The "Actionable" Part)
+        # Get top 5 most played champions (Compositions)
+        common_comps = p_df['hero'].value_counts().head(5).to_dict()
+
+        # Identify Key Player Tendencies
+        player_stats = []
+        for name in p_df['name'].unique():
+            p_subset = p_df[p_df['name'] == name]
+            player_stats.append({
+                "name": name,
+                "top_hero": p_subset['hero'].mode()[0],
+                "avg_kda": round(p_subset['kda'].mean(), 1)
+            })
+
+        # 3. Enhanced "How to Win" Logic
         recommendations = []
-        # General Strategy
         if macro['aggression'] == "High":
-            recommendations.append("⚠️ **Anti-Snowball:** Opponent relies on First Blood. Avoid Level 3 jungle invades.")
+            recommendations.append("⚠️ **Anti-Snowball:** Opponent relies on early kills. Prioritize safe lane-neutralizing picks.")
         
-        # Side-Specific Logic
-        if side_stats['blue_winrate'] > side_stats['red_winrate'] + 10:
-            recommendations.append("🔴 **Side Exploit:** Opponent struggles on Red side. Force them to pick Red to disrupt their comfort.")
-        
-        # Patch-Specific Logic
-        if patch_matches['win'].mean() < df['win'].mean():
-            recommendations.append(f"📉 **Patch Weakness:** Team has a lower winrate on {current_patch}. Their core champion pool was likely nerfed.")
+        # Direct Counter-Strategy Example
+        if any(h in common_comps for h in ["LeBlanc", "Zed", "Akali"]):
+            recommendations.append("🎯 **Counter-Strategy:** High frequency of assassins detected. Recommend picking **Lissandra** or **Vex** for lockdown.")
 
         return {
             "macro": macro,
-            "side_stats": side_stats,
+            "player_stats": player_stats[:5], # Top 5 players
+            "common_comps": common_comps,
             "recommendations": recommendations,
-            "charts": ReconEngine._create_visuals(df, side_stats)
+            "charts": ReconEngine._create_visuals(df)
         }
 
     @staticmethod
-    def _create_visuals(df, side_stats):
-        # Side Winrate Comparison
-        fig_side = go.Figure(data=[
-            go.Bar(name='Blue Side', x=['Winrate'], y=[side_stats['blue_winrate']], marker_color='#005a82'),
-            go.Bar(name='Red Side', x=['Winrate'], y=[side_stats['red_winrate']], marker_color='#ae1e1e')
-        ])
-        fig_side.update_layout(template="plotly_dark", barmode='group', paper_bgcolor='rgba(0,0,0,0)', height=300)
-
-        # Objective Priority Radar
+    def _create_visuals(df):
+        # Objective Radar
         fig_radar = go.Figure(data=go.Scatterpolar(
             r=[df['first_blood'].mean()*100, df['first_tower'].mean()*100, df['first_dragon'].mean()*100, df['first_herald'].mean()*100],
             theta=['First Blood', 'First Tower', 'First Dragon', 'First Herald'],
             fill='toself', marker=dict(color='#c8aa6e')
         ))
-        fig_radar.update_layout(template="plotly_dark", polar=dict(radialaxis=dict(visible=True, range=[0, 100])), paper_bgcolor='rgba(0,0,0,0)', height=300)
+        fig_radar.update_layout(template="plotly_dark", polar=dict(radialaxis=dict(visible=False)), paper_bgcolor='rgba(0,0,0,0)', height=300)
 
         return {
-            "side_chart": json.dumps(fig_side, cls=plotly.utils.PlotlyJSONEncoder),
             "radar_chart": json.dumps(fig_radar, cls=plotly.utils.PlotlyJSONEncoder)
         }
