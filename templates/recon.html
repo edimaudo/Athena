@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="hex-container" style="margin-bottom: 30px;">
-    <h2><span style="color: var(--hex-gold);\">OPPONENT SCOUTING:</span> Automated Recon</h2>
+    <h2><span style="color: var(--hex-gold);">OPPONENT SCOUTING:</span> Automated Recon</h2>
     <form method="POST" style="display: flex; gap: 15px;">
         <select name="tournament_id" class="btn-hex" style="flex-grow: 1;">
             {% for t in tournaments %}
@@ -15,19 +15,50 @@
 
 {% if report %}
     {% if report.error %}
-        <div class="hex-container" style="border-color: var(--hex-red); text-align: center;">
-            <h3 style="color: var(--hex-red);">DATA UNAVAILABLE</h3>
-            <p>{{ report.error }}</p>
-        </div>
+        <div class="hex-container"><p>{{ report.error }}</p></div>
     {% else %}
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div class="hex-container">
-                <h3 style="margin-bottom: 10px;">SIDE WINRATE</h3>
-                <div id="side-chart"></div>
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div class="hex-container" style="border-left: 5px solid var(--hex-gold);">
+                <h3 style="color: var(--hex-gold);">HOW TO WIN: COUNTER-STRATEGY</h3>
+                {% for rec in report.recommendations %}
+                    <div style="margin-bottom: 10px; padding: 10px; background: rgba(200,170,110,0.1);">{{ rec | safe }}</div>
+                {% endfor %}
             </div>
             <div class="hex-container">
-                <h3 style="margin-bottom: 10px;">OBJECTIVE DNA</h3>
+                <h3>COMMON COMPOSITIONS</h3>
+                {% for hero, count in report.common_comps.items() %}
+                    <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #333;">
+                        <span>{{ hero }}</span><span style="color: var(--hex-teal);">{{ count }} Picks</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="hex-container" style="margin-bottom: 20px;">
+            <h3 style="color: var(--hex-teal);">TARGET INTEL: PLAYER HABITS</h3>
+            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px;">
+                {% for player in report.player_stats %}
+                <div style="background: rgba(0,0,0,0.3); padding: 15px; text-align: center; border: 1px solid #444;">
+                    <div style="color: var(--hex-gold); font-weight: bold;">{{ player.name }}</div>
+                    <small>Prefers: {{ player.top_hero }}</small><br>
+                    <small>KDA: {{ player.avg_kda }}</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px;">
+            <div class="hex-container">
+                <h3>OBJECTIVE DNA</h3>
                 <div id="radar-chart"></div>
+            </div>
+            <div class="hex-container">
+                <h3>MACRO TENDENCIES</h3>
+                <table style="width: 100%;">
+                    <tr><td>Aggression</td><td style="text-align: right;">{{ report.macro.aggression }}</td></tr>
+                    <tr><td>Primary Objective</td><td style="text-align: right;">{{ report.macro.obj_priority }}</td></tr>
+                    <tr><td>Avg Gold @ 15m</td><td style="text-align: right;">+{{ report.macro.avg_gd15 }}g</td></tr>
+                </table>
             </div>
         </div>
     {% endif %}
@@ -36,15 +67,10 @@
 
 {% block scripts %}
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    
-    {# Safety Fix: Only execute JavaScript if there is no error in the report #}
     {% if report and not report.error %}
     <script>
-        const sideData = {{ report.charts.side_chart | safe }};
         const radarData = {{ report.charts.radar_chart | safe }};
-        
-        Plotly.newPlot('side-chart', sideData.data, sideData.layout);
-        Plotly.newPlot('radar-chart', radarData.data, radarData.layout);
+        Plotly.newPlot('radar-chart', radarData.data, radarData.layout, {responsive: true});
     </script>
     {% endif %}
     <script src="{{ url_for('static', filename='js/recon.js') }}"></script>
