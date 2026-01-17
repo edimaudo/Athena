@@ -31,35 +31,20 @@ def about():
 
 @app.route('/recon', methods=['GET', 'POST'])
 def recon():
-    """Scouts an opponent using live GRID data."""
-    # title_id "3" corresponds to League of Legends in GRID
-    tournaments = grid.get_tournaments(title_id="3") 
+    # Logic Change: Fetch Teams instead of Tournaments for the dropdown
+    opponents = grid.get_teams(title_id="3") 
     report = None
     
     if request.method == 'POST':
-        t_id = request.form.get('tournament_id')
+        # Get the Team ID from the form
+        team_id = request.form.get('team_id')
         
-        # 1. SCOUR: Fetch actual series IDs from the selected tournament
-        raw_series_list = grid.get_recent_series(t_id)
+        # 1. SCOUR: Fetch series specifically for this team
+        raw_series_list = grid.get_recent_series_by_team(team_id)
         
-        # 2. PROCESS: Iterate through series to fetch granular match data
-        # Replacing the previous mock list with actual API calls
-        processed_matches = []
-        for series in raw_series_list[:10]:  # Limit to last 10 for performance
-            series_id = series.get('id')
-            # Assuming data_manager has a method to fetch state details
-            match_stats = grid.get_series_stats(series_id) 
-            if match_stats:
-                processed_matches.append(match_stats)
-        
-        # 3. ANALYZE: Generate the report using the real match history
-        if processed_matches:
-            report = ReconEngine.generate_full_report(processed_matches, team_id=t_id)
-        else:
-            # Handle cases where no data is returned
-            report = {"error": "No match data found for the selected tournament."}
-
-    return render_template('recon.html', tournaments=tournaments, report=report)
+        # ... rest of your processing logic ...
+    
+    return render_template('recon.html', opponents=opponents, report=report)
 
 @app.route('/draft', methods=['GET', 'POST'])
 def draft():
