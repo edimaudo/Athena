@@ -28,18 +28,22 @@ class GridDataManager:
     
     def get_teams(self, title_id="3"):
         """
-        Fetches teams for the selection dropdown. 
-        Title ID '3' is League of Legends.
+        Revised query with explicit first count and title filter.
         """
         query = """
-            query Teams($titleId: [ID!]) {
-                teams(filter: { titleId: { in: $titleId }, externalIds: { source: "POWER_STATS" } }, first: 50) {
-                    edges { node { id name } }
+        query Teams($titleId: [ID!]) {
+            teams(filter: { titleId: { in: $titleId } }, first: 50) {
+                edges { 
+                    node { 
+                        id 
+                        name 
+                    } 
                 }
             }
-            """
-        result = self._execute_query(query, {"titleId": [title_id]})
-        if result and 'data' in result and 'teams' in result['data']:
+        }
+        """
+        result = self._execute_query(query, {"titleId": title_id}) # Note: passing title_id directly
+        if result and 'data' in result and result['data'].get('teams'):
             return [edge['node'] for edge in result['data']['teams']['edges']]
         return []
 
@@ -93,5 +97,6 @@ class GridDataManager:
             matches = result['data']['series'].get('matches', [])
             return matches if matches else None
         return None
+
 
 
