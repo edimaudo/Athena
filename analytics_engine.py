@@ -6,61 +6,70 @@ import json
 
 class ReconEngine:
     @staticmethod
-    def generate_full_report(match_history, team_id, current_patch="16.1"):
-        # Handle single dictionary or list of matches
+    def generate_full_report(match_history, team_id):
+        # LOGIC FIX: Flatten the list of lists from app.py
         flat_matches = []
-        if isinstance(match_history, list) and isinstance(match_history[0], list):
-            for series in match_history: flat_matches.extend(series)
-        else:
-            flat_matches = [match_history] if isinstance(match_history, dict) else match_history
-            
+        for item in match_history:
+            if isinstance(item, list):
+                flat_matches.extend(item)
+            else:
+                flat_matches.append(item)
+        
+        if not flat_matches:
+            return {"error": "No valid match data to analyze."}
+
         df = pd.DataFrame(flat_matches)
         
-        # 1. Macro Analysis
-        macro = {
-            "aggression": "High" if df['first_blood'].mean() > 0.6 else "Scaling",
-            "obj_priority": "Dragon" if df['first_dragon'].mean() > df['first_herald'].mean() else "Tempo/Herald",
-            "avg_gd15": int(df['gold_diff_15'].mean())
-        }
+        # 1. DYNAMIC MACRO CALCULATION
+        # Calculate rates based on actual API data provided
+        fb_rate = df['first_blood'].mean() if 'first_blood' in df else 0
+        fd_rate = df['first_dragon'].mean() if 'first_dragon' in df else 0
+        avg_gd15 = df['gold_diff_15'].mean() if 'gold_diff_15' in df else 0
 
-        # 2. Player & Comp Analysis (New Logic)
+        # 2. DYNAMIC COMPOSITION & PLAYER TENDENCIES
         all_participants = []
-        for match in flat_matches:
-            all_participants.extend(match.get('participants', []))
+        for m in flat_matches:
+            all_participants.extend(m.get('participants', []))
         
-        p_df = pd.DataFrame([
+        pdf = pd.DataFrame([
             {
                 'name': p['player']['name'], 
                 'hero': p['hero']['name'], 
+                'role': p['role'],
                 'kda': (p['kills'] + p['assists']) / max(1, p['deaths'])
             } for p in all_participants
         ])
 
-        # Get top 5 most played champions (Compositions)
-        common_comps = p_df['hero'].value_counts().head(5).to_dict()
+        # Identify most played heroes (Compositions)
+        common_comps = pdf['hero'].value_counts().head(5).to_dict()
 
-        # Identify Key Player Tendencies
-        player_stats = []
-        for name in p_df['name'].unique():
-            p_subset = p_df[p_df['name'] == name]
-            player_stats.append({
+        # Identify Player Outliers (Target Ban Logic)
+        player_intel = []
+        for name in pdf['name'].unique():
+            p_subset = pdf[pdf['name'] == name]
+            top_hero = p_subset['hero'].mode()[0]
+            # Calculate if they rely on one hero (>40% pick rate)
+            is_specialist = (p_subset['hero'] == top_hero).mean() > 0.4
+            player_intel.append({
                 "name": name,
-                "top_hero": p_subset['hero'].mode()[0],
-                "avg_kda": round(p_subset['kda'].mean(), 1)
+                "top_hero": top_hero,
+                "status": "Priority Ban" if is_specialist else "Flexible"
             })
 
-        # 3. Enhanced "How to Win" Logic
+        # 3. DYNAMIC INSIGHTS (No hardcoding)
         recommendations = []
-        if macro['aggression'] == "High":
-            recommendations.append("⚠️ **Anti-Snowball:** Opponent relies on early kills. Prioritize safe lane-neutralizing picks.")
+        if fb_rate > 0.6:
+            recommendations.append(f"🎯 **Strategy:** Opponent wins {int(fb_rate*100)}% of early duels. Recommend defensive jungle pathing.")
         
-        # Direct Counter-Strategy Example
-        if any(h in common_comps for h in ["LeBlanc", "Zed", "Akali"]):
-            recommendations.append("🎯 **Counter-Strategy:** High frequency of assassins detected. Recommend picking **Lissandra** or **Vex** for lockdown.")
+        if fd_rate < 0.4:
+            recommendations.append(f"🐉 **Exploit:** Team neglects early Dragons ({int(fd_rate*100)}% contested). Focus bot-side priority.")
 
         return {
-            "macro": macro,
-            "player_stats": player_stats[:5], # Top 5 players
+            "macro": {
+                "style": "Early Aggression" if fb_rate > 0.55 else "Scaling",
+                "gd15": int(avg_gd15)
+            },
+            "player_stats": player_intel[:5],
             "common_comps": common_comps,
             "recommendations": recommendations,
             "charts": ReconEngine._create_visuals(df)
@@ -68,14 +77,19 @@ class ReconEngine:
 
     @staticmethod
     def _create_visuals(df):
-        # Objective Radar
-        fig_radar = go.Figure(data=go.Scatterpolar(
-            r=[df['first_blood'].mean()*100, df['first_tower'].mean()*100, df['first_dragon'].mean()*100, df['first_herald'].mean()*100],
+        # Dynamic Radar Chart based on API results
+        metrics = ['first_blood', 'first_tower', 'first_dragon', 'first_herald']
+        values = [df[m].mean() * 100 if m in df else 0 for m in metrics]
+        
+        fig = go.Figure(data=go.Scatterpolar(
+            r=values,
             theta=['First Blood', 'First Tower', 'First Dragon', 'First Herald'],
-            fill='toself', marker=dict(color='#c8aa6e')
+            fill='toself',
+            marker=dict(color='#c8aa6e')
         ))
-        fig_radar.update_layout(template="plotly_dark", polar=dict(radialaxis=dict(visible=False)), paper_bgcolor='rgba(0,0,0,0)', height=300)
-
-        return {
-            "radar_chart": json.dumps(fig_radar, cls=plotly.utils.PlotlyJSONEncoder)
-        }
+        fig.update_layout(
+            template="plotly_dark",
+            paper_bgcolor='rgba(0,0,0,0)',
+            polar=dict(radialaxis=dict(visible=False))
+        )
+        return {"radar_chart": json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)}
