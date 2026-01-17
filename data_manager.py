@@ -25,17 +25,54 @@ class GridDataManager:
         }"""
         result = self._execute_query(query, {"titleId": [title_id]})
         return [edge['node'] for edge in result['data']['tournaments']['edges']] if result else []
-
-    def get_recent_series(self, tournament_id):
-        query = """query AllSeries($tournamentId: [ID!]) {
-            allSeries(filter: { tournament: { id: { in: $tournamentId } } }, orderBy: StartTimeScheduled) {
-                edges { node { id } }
+    
+    def get_teams(self, title_id="3"):
+        """
+        Fetches teams for the selection dropdown. 
+        Title ID '3' is League of Legends.
+        """
+        query = """
+        query Teams($titleId: [ID!]) {
+            teams(filter: { title: { id: { in: $titleId } } }) {
+                edges { 
+                    node { 
+                        id 
+                        name 
+                    } 
+                }
             }
-        }"""
-        result = self._execute_query(query, {"tournamentId": [tournament_id]})
-        return [edge['node'] for edge in result['data']['allSeries']['edges']] if result else []
+        }
+        """
+        result = self._execute_query(query, {"titleId": [title_id]})
+        if result and 'data' in result and 'teams' in result['data']:
+            return [edge['node'] for edge in result['data']['teams']['edges']]
+        return []
+
+    def get_recent_series_by_team(self, team_id):
+        """
+        Scours GRID data for the last 10 series played by a specific team.
+        """
+        query = """
+        query TeamSeries($teamId: [ID!]) {
+            allSeries(filter: { teams: { id: { in: $teamId } } }, first: 10, orderBy: StartTimeScheduled) {
+                edges { 
+                    node { 
+                        id 
+                    } 
+                }
+            }
+        }
+        """
+        result = self._execute_query(query, {"teamId": [team_id]})
+        if result and 'data' in result and 'allSeries' in result['data']:
+            return [edge['node'] for edge in result['data']['allSeries']['edges']]
+        return []
 
     def get_series_stats(self, series_id):
+        """
+        Retrieves granular match and participant data for the analytics engine.
+        Uses aliases to match the engine's expected field names.
+        """
         query = """
         query Series($id: ID!) {
             series(id: $id) {
@@ -61,3 +98,4 @@ class GridDataManager:
             matches = result['data']['series'].get('matches', [])
             return matches if matches else None
         return None
+
