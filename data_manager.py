@@ -32,17 +32,12 @@ class GridDataManager:
         Title ID '3' is League of Legends.
         """
         query = """
-        query Teams($titleId: [ID!]) {
-            teams(filter: { title: { id: { in: $titleId } } }) {
-                edges { 
-                    node { 
-                        id 
-                        name 
-                    } 
+            query Teams($titleId: [ID!]) {
+                teams(filter: { titleId: { in: $titleId }, externalIds: { source: "POWER_STATS" } }, first: 50) {
+                    edges { node { id name } }
                 }
             }
-        }
-        """
+            """
         result = self._execute_query(query, {"titleId": [title_id]})
         if result and 'data' in result and 'teams' in result['data']:
             return [edge['node'] for edge in result['data']['teams']['edges']]
@@ -98,4 +93,5 @@ class GridDataManager:
             matches = result['data']['series'].get('matches', [])
             return matches if matches else None
         return None
+
 
