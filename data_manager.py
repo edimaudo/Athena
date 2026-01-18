@@ -28,11 +28,12 @@ class GridDataManager:
     
     def get_teams(self, title_id="3"):
         """
-        Revised query with explicit first count and title filter.
+        Resilient GraphQL query for teams. 
+        Uses titleIds (list) and first: 50.
         """
         query = """
-        query Teams($titleId: [ID!]) {
-            teams(filter: { titleId: { in: $titleId } }, first: 50) {
+        query Teams($titleIds: [ID!]) {
+            teams(filter: { titleId: { in: $titleIds } }, first: 50) {
                 edges { 
                     node { 
                         id 
@@ -42,9 +43,21 @@ class GridDataManager:
             }
         }
         """
-        result = self._execute_query(query, {"titleId": title_id}) # Note: passing title_id directly
-        if result and 'data' in result and result['data'].get('teams'):
+        # Note: GRID often expects titleId to be passed as a list [] in the variables
+        result = self._execute_query(query, {"titleIds": [title_id]})
+        
+        # LOGICAL CHECK: Check terminal for this print if dropdown is still empty
+        if result is None:
+            print("CRITICAL: API Connection failed. Check your API Key.")
+            return []
+        
+        if 'errors' in result:
+            print(f"GRID GraphQL Errors: {result['errors']}")
+            return []
+    
+        if 'data' in result and result['data'].get('teams'):
             return [edge['node'] for edge in result['data']['teams']['edges']]
+        
         return []
 
     def get_recent_series_by_team(self, team_id):
@@ -97,6 +110,7 @@ class GridDataManager:
             matches = result['data']['series'].get('matches', [])
             return matches if matches else None
         return None
+
 
 
 
